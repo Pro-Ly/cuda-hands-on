@@ -191,7 +191,7 @@ $M_{j,i}$ 相当于 C 表达式 M[j][i]，但可读性稍好一些。 图 3.3 �
 
 由于每行都有宽度像素，我们可以为行 row 和列 col 处的像素生成一维索引，即 row × width+col （第 10 行）。 
 此 1D 索引 greyOffset 是 Pout 的像素索引，因为输出灰度图像中的每个像素都是 1 个字节（无符号字符）。 
-以我们的 623 76 图像为例，块 (1,0) 的线程 (0,0) 计算出 Pout 像素的线性化一维索引，公式如下：
+以我们的 $62 \times 76$ 图像为例，块 (1,0) 的线程 (0,0) 计算出 Pout 像素的线性化一维索引，公式如下：
 
 {\color{red} CODE}
 
@@ -334,30 +334,36 @@ curRow 变量为 row-BLUR\_SIZE$ = (25 - 1) = 24$ 因此，在外循环的第一
 	正如我们稍后将讨论的，BLAS 函数的不同实现的性能在顺序计算机和并行计算机中可能存在数量级的差异。
 \end{remark}
 
-$I \times j$（i 行 x j 列）矩阵 M 和 $j \times k$ 矩阵 N 之间的矩阵乘法生成 $I \times k$ 矩阵 P。
-执行矩阵乘法时，输出矩阵 P 的每个元素都是 a 的内积 M 行，N 列。我们将继续使用约定，
-其中 P row, col 是垂直方向上第 rowth 位置和水平方向上第 colth 位置的元素。 
-如图 3.10 所示，P row,col（P 中的小方块）是 M 的 rowth 行（M 中显示为水平条）形成的向量
-与 M 的 colth 列形成的向量的内积。 N（显示为 N 中的垂直条）。 
-两个向量的内积（有时称为点积）是各个向量元素的乘积之和。 那是，
-
-{\color{red} CODE}
+$\mathrm{I} \times \mathrm{j}$（$\mathrm{i}$ 行乘以 $\mathrm{j}$ 列）矩阵 $M$ 
+和 $\mathrm{j} \times \mathrm{k}$ 矩阵 $\mathrm{N}$ 之间的矩阵乘法
+生成 $\mathrm{I} \times \mathrm{k}$ 矩阵 $\mathrm{P}$。 
+当进行矩阵乘法时，输出矩阵$P$的每个元素都是行$M$和列$\mathrm{N}$的内积。 
+我们将继续使用约定，其中 $\mathrm{P}_{\text {row, col }}$ 是垂直方向上第 rowth 位置和水平方向上第 colth 位置的元素。 
+如图3.10所示，$\mathrm{P}_{\text {row,col }}$（$\mathrm{P}$中的小方块）
+是由第row行形成的向量的内积 $M$（在 $M$ 中显示为水平条带）和由 $N$ 的 colth 列形成的向量（在 N 中显示为垂直条带）。 
+两个向量的内积（有时称为点积）是各个向量元素的乘积之和。
+$$
+\mathrm{P}_{\text {row }, \mathrm{col}}=\sum \mathrm{M}_{\text {row }, \mathrm{k}}{ }^{*} \mathrm{~N}_{\mathrm{k}, \mathrm{col}} \quad \text { for } \mathrm{k}=0,1, \ldots \text { Width }-1
+$$
 
 {\color{red} Fig 3.10}
 
-例如，在图 3.10 中，假设第 5 行 1，第 5 列 5，
-
-{\color{red} CODE}
+例如，在图 3.10 中，假设行 $=1$ 且 $\mathrm{col}=5$，
+$$
+\mathrm{P}_{1,5}=\mathrm{M}_{1,0}{ }^{*} \mathrm{~N}_{0,5}+\mathrm{M}_{1,1}{ }^{*} \mathrm{~N}_{1,5}+\mathrm{M}_{1,2}{ }^{*} \mathrm{~N}_{2,5}+\ldots .+\mathrm{M}_{1, \text { Width }-1}{ }^{*} \mathrm{~N}_{\text {Width-1,5}}
+$$
 
 要使用 CUDA 实现矩阵乘法，我们可以使用与 colorToGrayscaleConversion 相同的方法
 将网格中的线程映射到输出矩阵 P 的元素。 即每个线程负责计算一个P元素。 
 每个线程要计算的 P 元素的行索引和列索引与之前相同：
-
-{\color{red} CODE}
+$$
+\text { row }=\text { blockIdx } \cdot y^{\star} \text { blockDim.y }+ \text { threadIdx } \cdot y
+$$
 
 和
-
-{\color{red} CODE}
+$$
+\operatorname{col}=\text { blockIdx.x*blockDim.x }+ \text { threadIdx.x }
+$$
 
 {\color{red} Fig 3.11}
 
