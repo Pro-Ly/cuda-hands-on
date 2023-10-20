@@ -69,7 +69,11 @@ CUDA设备的全局存储器是用DRAM实现的。 数据位存储在小电容�
 充分利用它们所接触的每个缓存行中的字节的应用程序往往比随机访问内存位置的应用程序获得更高的性能。 
 我们在本章中介绍的技术可以用来帮助 CPU 程序实现高性能。}。
 
-{\color{red} Fig 6.1}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F6.1.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 为了理解如何有效地使用合并硬件，我们需要回顾一下在访问 C 多维数组元素时内存地址是如何形成的。 
 回想一下第 3 章“多维网格和数据”（为了方便起见，图 3.3 在此复制为图 6.1），
@@ -79,7 +83,11 @@ C 和 CUDA 中的多维数组元素根据行优先约定放置到线性寻址内
 最后是第 3 行的元素。应该清楚的是，$M_{0,0}$ 和 $M_{1,0}$ 尽管在二维矩阵中看起来是连续的，
 但它们是 在线性寻址存储器中分开放置四个位置。
 
-{\color{red} Fig 6.2}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F6.2.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 假设图 6.1 中的多维数组是一个矩阵，在矩阵乘法中用作第二个输入矩阵。 
 在这种情况下，warp 中分配给连续输出元素的连续线程将迭代该输入矩阵的连续列。 
@@ -101,7 +109,11 @@ C 和 CUDA 中的多维数组元素根据行优先约定放置到线性寻址内
 在 C 中，这相当于将转置矩阵视为原始矩阵的列优先布局。 
 不管出于什么原因，让我们观察一下当矩阵乘法示例的第二个输入矩阵以列优先顺序存储时所实现的内存访问模式。
 
-{\color{red} Fig 6.3}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F6.3.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 图 6.3 说明了当矩阵按列优先顺序存储时，连续线程如何迭代连续列。 
 图6.3的左上部分显示了代码，右上部分显示了存储器访问的逻辑视图。 该程序仍在尝试让每个线程访问矩阵 M 的一列。
@@ -123,7 +135,11 @@ C 和 CUDA 中的多维数组元素根据行优先约定放置到线性寻址内
 我们还将在本书中看到使用此策略的示例优化，包括我们现在将应用于矩阵-矩阵乘法的优化，其中第二个输入矩阵采用列主布局。 
 这种优化称为转角。
 
-{\color{red} Fig 6.4}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F6.4.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 图 6.4 说明了如何应用转角的示例。 在此示例中，A 是在全局内存中以行优先布局存储的输入矩阵，
 B 是在全局内存中以列优先布局存储的输入矩阵。 它们相乘产生一个输出矩阵 C，该矩阵以行优先布局存储在全局内存中。 
@@ -147,7 +163,11 @@ B 是在全局内存中以列优先布局存储的输入矩阵。 它们相乘�
 无论哪种方式，在加载输入图块后，每个线程都可以访问其输入，而性能损失很小。 
 这是因为共享内存是通过 SRAM 技术实现的，不需要合并。
 
-{\color{red} Fig 6.5}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F6.5.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 内存合并的主要优点是，它通过将多个内存访问合并为一次访问来减少全局内存流量。 
 当同时发生并访问相邻的存储位置时，可以组合访问。 交通拥堵不仅仅出现在计算领域。 
@@ -163,7 +183,11 @@ B 是在全局内存中以列优先布局存储的输入矩阵。 它们相乘�
 也有一些国家的政府让汽油变得非常昂贵，以至于人们为了省钱而拼车。 
 所有这些鼓励拼车的措施都是为了克服拼车需要额外努力的事实，如图6.6所示。
 
-{\color{red} Fig 6.6}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F6.6.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 拼车要求希望拼车的工人妥协并就共同的通勤时间表达成一致。 图 6.6 的上半部分显示了良好的拼车时间表模式。 
 时间从左向右。 工人 A 和工人 B 的睡眠、工作和晚餐时间表相似。 这使得这两名工人可以轻松地用一辆车上下班和回家。 
@@ -178,7 +202,11 @@ B 是在全局内存中以列优先布局存储的输入矩阵。 它们相乘�
 同一 warp 中的线程是完美的候选者，因为它们都通过 SIMD 执行同时执行加载指令。
 
 \subsection{隐藏内存延迟}
-{\color{red} Fig 6.7}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F6.7.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 正如我们在第 6.1 节中所解释的，DRAM 突发是并行组织的一种形式：并行访问 DRAM 核心阵列中的多个位置。 
 然而，仅突发不足以实现现代处理器所需的 DRAM 访问带宽水平。 
@@ -193,7 +221,11 @@ DRAM 系统通常采用另外两种形式的并行组织：存储体(banks)和�
 现代 CPU 可能需要至少 32 GB/s 的内存带宽，而现代 GPU 可能需要 256 GB/s。 
 对于此示例，CPU 将需要 2 个通道，GPU 将需要 16 个通道。
 
-{\color{red} Fig 6.8}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F6.8.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 对于每个通道，与其连接的 Bank 数量由充分利用总线数据传输带宽所需的 Bank 数量决定。 如图 6.8 所示。 
 每个存储体包含一个 DRAM 单元阵列、用于访问这些单元的传感放大器以及用于将突发数据传送到总线的接口（第 6.1 节）。
@@ -234,7 +266,11 @@ DRAM 系统通常采用另外两种形式的并行组织：存储体(banks)和�
 即确保发出足够的内存访问请求来隐藏 DRAM 访问延迟，从而有效地利用内存带宽。 
 当然，为了实现最佳的带宽利用率，这些内存访问必须均匀分布在通道和存储体上，并且对存储体的每次访问也必须是合并访问。
 
-{\color{red} Fig 6.9}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F6.9.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 图 6.9 显示了将数组 M 的元素分配到通道和组的玩具示例。 我们假设两个元素（8 字节）的小突发大小。 
 分发是通过硬件设计完成的。 通道和后端的寻址使得数组的前 8 个字节（M[0] 和 M[1]）存储在通道 0 的存储体 0 中，
@@ -254,12 +290,20 @@ M[18] 和 M[19] 将存储在通道 1 的 Bank 0 中，以此类推。
 然后再转移到通道 1 的存储体 0。
 在我们的玩具示例中，只要我们至少有 16 个元素，分配就会涉及所有通道 以及用于存储元素的储存体。
 
-{\color{red} Fig 6.10}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F6.10.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 我们现在说明并行线程执行和并行内存组织之间的交互。 我们将使用图 5.5 中的示例，复制为图 6.10。 
 我们假设乘法将使用 $2 \times 2$ 个线程块和 $2 \times 2$ 个图块来执行。
 
-{\color{red} Fig 6.11}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F6.11.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 在内核执行的阶段 0 期间，所有四个线程块都将加载它们的第一个图块。 每个图块涉及的M个元素如图6.11所示。 
 第 2 行显示了在第 0 阶段访问的 M 个元素及其 2D 索引。 第 3 行显示相同的 M 元素及其线性化索引。 
@@ -298,7 +342,11 @@ M[18] 和 M[19] 将存储在通道 1 的 Bank 0 中，以此类推。
 在这种情况下，程序员最好部分串行化工作并减少并行性所付出的代价。 
 这可以通过为每个线程分配多个工作单元来完成，这通常称为线程粗化。
 
-{\color{red} Fig 6.12}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F6.12.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 我们使用第 5 章“内存架构和数据局部性”中的平铺矩阵乘法示例演示了线程粗化优化。 
 图 6.12 描述了计算输出矩阵 P 的两个水平相邻输出块的存储器访问模式。
@@ -311,7 +359,11 @@ M[18] 和 M[19] 将存储在通道 1 的 Bank 0 中，以此类推。
 在后一种情况下，程序员最好让单个线程块处理两个输出图块，从而块中的每个线程处理两个输出元素。 
 这样，粗化的线程块将加载 M 的输入图块一次并将它们重新用于多个输出图块。
 
-{\color{red} Fig 6.13}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F6.13.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 图 6.13 显示了如何将线程粗化应用于第 5 章“内存架构和数据局部性”中的平铺矩阵乘法代码。 
 在第 02 行添加了一个常量 COARSE\_FACTOR 来表示粗化因子，它是每个粗化线程将负责的原始工作单元的数量。 

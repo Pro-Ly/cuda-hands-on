@@ -12,7 +12,11 @@
 然后详细阐述了整个 GPU 架构的各种性能考虑因素。 掌握这些概念的 CUDA C 程序员能够很好地编写和理解高性能并行内核。
 
 \subsection{现代GPU架构}
-{\color{red} Fig 4.1}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F4.1.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 图 4.1 显示了 CUDA C 程序员对典型支持 CUDA 的 GPU 架构的高级视图。 它被组织成一系列高度线程化的流式多处理器（SM）。 
 每个 SM 都有多个称为流处理器或 CUDA 核心（以下简称为核心）的处理单元，如图 4.1 中 SM 内的小块所示，
@@ -28,7 +32,11 @@ GPU 还配备了千兆字节的片外设备内存，在图 4.1 中称为“全�
 当调用内核时，CUDA 运行时系统会启动执行内核代码的线程网格。 这些线程逐块分配给 SM。 
 也就是说，一个块中的所有线程同时分配给同一个SM。
 
-{\color{red} Fig 4.2}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F4.2.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 图 4.2 说明了块到 SM 的分配。 多个块可能同时分配给同一个 SM。 例如，在图4.2中，每个SM分配了三个块。 
 然而，块需要预留硬件资源来执行，因此只能将有限数量的块同时分配给给定的SM。 块数量的限制取决于第 4.6 节中讨论的各种因素。
@@ -56,12 +64,20 @@ CUDA 允许同一块中的线程使用屏障同步函数 \_\_syncthreads() 协�
 他们必须等到四个朋友都回到车上后才能离开。 比其他人早完成的人必须等待比其他人更晚完成的人。 
 如果没有障碍同步，当汽车离开时，一个或多个人可能会留在商场里，这可能会严重损害他们的友谊！
 
-{\color{red} Fig 4.3}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F4.3.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 图 4.3 说明了屏障同步的执行过程。 块中有N个线程。 时间从左向右。 有些线程较早到达屏障同步语句，有些则晚得多。 
 早到的人会等待迟到的人。 当最新的线程到达屏障时，所有线程都可以继续执行。 通过屏障同步，“没有人被抛在后面”。
 
-{\color{red} Fig 4.4}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F4.4.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 在 CUDA 中，如果存在 \_\_syncthreads() 语句，则它必须由块中的所有线程执行。 
 当 \_\_syncthreads() 语句放置在 if 语句中时，块中的所有线程要么执行包含 \_\_syncthreads() 的路径，要么都不执行。 
@@ -82,7 +98,11 @@ CUDA 运行时系统通过将执行资源分配给块中的所有线程作为一
 也就是说，只有当运行时系统获得了块中所有线程完成执行所需的所有资源时，块才能开始执行。 
 这确保了块中所有线程的时间接近性，并防止屏障同步期间出现过多甚至不确定的等待时间。
 
-{\color{red} Fig 4.5}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F4.5.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 这导致我们在 CUDA 屏障同步设计中进行重要的权衡。 通过不允许不同块中的线程彼此执行屏障同步，
 CUDA 运行时系统可以以相对于彼此的任何顺序执行块，因为它们都不需要彼此等待。 这种灵活性支持可扩展的实施，
@@ -106,7 +126,11 @@ CUDA GPU 中的线程调度是一个硬件实现概念，因此必须在特定�
 一旦将块分配给 SM，它就会被进一步划分为称为线程束(warp)的 32 线程单元。 warp的大小是特定于实现的，
 并且在未来几代 GPU 中可能会有所不同。 了解warp有助于理解和优化特定代 CUDA 设备上的 CUDA 应用程序的性能。
 
-{\color{red} Fig 4.6}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F4.6.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 Warp是SM中线程调度的单位。 图 4.6 显示了实现中将块划分为 warp 的情况。 
 在此示例中，存在三个块：块 1、块 2 和块 3 — 全部分配给 SM。 出于调度目的，这三个块中的每一个都被进一步划分为 warp。 
@@ -126,7 +150,11 @@ SM 中有 3 个块，SM 中有 $8 \times 3 = 24$ 个warp。 根据线程索引�
 threadIdx.y为2的线程将放置在threadIdx.y为2的线程之后。 其threadIdx.y为1，依此类推。 
 具有相同 threadIdx.y 值的线程按 threadIdx.x 递增顺序放置在连续位置。
 
-{\color{red} Fig 4.7}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F4.7.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 图 4.7 显示了将二维块的线程放入线性布局的示例。 上半部分显示了块的二维视图。 
 读者应该认识到与二维数组的行优先布局的相似性。 每个线程显示为 $T_{y,x}$ ，x 为 threadIdx.x，y 为 threadIdx.y。 
@@ -143,7 +171,11 @@ threadIdx.y为2的线程将放置在threadIdx.y为2的线程之后。 其threadI
 64 个线程将被划分为两个 warp，其中 $T_{0,0}$， 
 第一个warp中为 0 到 $T_{0,7,3}$，第二个warp中为 $T_{1,0,0}$ 到 $T_{1,7,3}$。
 
-{\color{red} Fig 4.8}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F4.8.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 SM 旨在按照单指令、多数据 (SIMD) 模型执行 warp 中的所有线程。 也就是说，在任何时刻，
 都会为 warp 中的所有线程获取并执行一条指令（请参阅“Warps 和 SIMD 硬件”侧边栏）。 
@@ -198,7 +230,11 @@ SIMD 的优点是控制硬件（例如指令获取/调度单元）的成本由�
 这保留了线程的独立性，同时利用了 SIMD 硬件成本降低的优势。 
 然而，发散的代价是硬件需要采取额外的传递来允许warp中的不同线程做出自己的决定，以及每个传递中不活动线程消耗的执行资源。
 
-{\color{red} Fig 4.9}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F4.9.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 图 4.9 显示了 warp 如何执行发散的 if-else 语句的示例。 
 在此示例中，当由线程 0-31 组成的 warp 到达 if-else 语句时，线程 0-23 采用 then-path，
@@ -209,7 +245,11 @@ SIMD 的优点是控制硬件（例如指令获取/调度单元）的成本由�
 这意味着一个遍的执行可以与另一遍的执行交错。 此功能称为独立线程调度。 
 有兴趣的读者可参阅 Volta V100 架构白皮书（NVIDIA，2017）了解详细信息。
 
-{\color{red} Fig 4.10}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F4.10.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 其他控制流结构中也可能出现分支。 图 4.10 显示了 warp 如何执行发散 for 循环的示例。 
 在此示例中，每个线程执行不同数量的循环迭代，其范围在四到八之间。 对于前四次迭代，所有线程都处于活动状态并执行 A。

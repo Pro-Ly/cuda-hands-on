@@ -70,7 +70,11 @@ gridDim.y 和 gridDim.z 的允许值范围为 1 到 $2^{16} - 1$(65,535)。
 例如，blockDim 值为 (512, 1, 1)、(8, 16, 4) 和 (32 , 16, 2) 都允许，但 (32, 32, 2) 不允许，
 因为线程总数会超过 1024。
 
-{\color{red} Fig 3.1}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F3.1.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 网格及其块不需要具有相同的维度。 网格可以具有比其块更高的维度，反之亦然。 例如，图 3.1 显示了一个小型玩具网格示例，
 其 gridDim 为 (2, 2, 1)，blockDim 为 (4, 2, 2)。 可以使用以下主机代码创建这样的网格：
@@ -91,7 +95,11 @@ gridDim.y 和 gridDim.z 的允许值范围为 1 到 $2^{16} - 1$(65,535)。
 我们使用这些小数字是为了保持插图简单。 典型的 CUDA 网格包含数千到数百万个线程。
 
 \subsection{将线程映射到多维数据}
-{\color{red} Fig 3.2}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F3.2.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 1D、2D 或 3D 线程组织的选择通常基于数据的性质。 例如，图片是像素的二维阵列。 
 使用由 2D 块组成的 2D 网格通常可以方便地处理图片中的像素。 
@@ -163,7 +171,11 @@ $M_{j,i}$ 相当于 C 表达式 M[j][i]，但可读性稍好一些。 图 3.3 �
 然后，第 i 项在第 j 行的部分中选择正确的元素。 例如，$M_{2,1}$ 的一维索引为 $2 × 4 + 1 = 9$。
 如图 3.3 所示，其中 $M_9$ 是与 $M_{2,1}$ 等效的一维索引。 这就是 C 编译器线性化二维数组的方式。
 
-{\color{red} Fig 3.3}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F3.3.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 线性化二维数组的另一种方法是将同一列的所有元素放置在连续的位置。 然后将这些列依次放入内存空间中。 
 这种排列称为列优先布局，由 FORTRAN 编译器使用。 请注意，二维数组的列优先布局等效于其转置形式的行优先布局。 
@@ -172,7 +184,11 @@ $M_{j,i}$ 相当于 C 表达式 M[j][i]，但可读性稍好一些。 图 3.3 �
 此外，许多设计供 FORTRAN 程序使用的 C 库使用列优先布局来匹配 FORTRAN 编译器布局。 
 因此，如果用户从 C 程序调用这些库，这些库的手册页通常会告诉用户转置输入数组。
 
-{\color{red} Fig 3.4}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F3.4.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 现在我们准备研究colorToGrayscaleConversion的源代码，如图3.4所示。 
 内核代码使用以下公式将每个彩色像素转换为其对应的灰度像素：
@@ -207,7 +223,11 @@ $M_{j,i}$ 相当于 C 表达式 M[j][i]，但可读性稍好一些。 图 3.3 �
 
 正在访问的数据是从字节偏移量 3648 开始的 3 个字节。
 
-{\color{red} Fig 3.5}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F3.5.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 图 3.5 说明了在处理 $62 \times 76$ 示例时 colorToGrayscaleConversion 的执行情况。 
 假设有 $16 \times 16$ 个块，调用 colorToGrayscaleConversion 内核会生成 $64 \times 80$ 个线程。 
@@ -254,7 +274,11 @@ CUDA 内核中 3D 数组的使用将在第 8 章 Stencil 中对模板模式进�
 在实际的CUDA C程序中，线程经常对其数据执行复杂的操作，并且需要相互协作。 
 在接下来的几章中，我们将研究展示这些特征的日益复杂的示例。 我们将从图像模糊函数开始。
 
-{\color{red} Fig 3.6}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F3.6.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 图像模糊可以消除像素值的突然变化，同时保留对于识别图像关键特征至关重要的边缘。 图 3.6 说明了图像模糊的效果。 
 简单地说，我们使图像变得模糊。 对于人眼来说，模糊的图像往往会掩盖细节并呈现“大局”印象，或者图片中的主要主题对象。 
@@ -268,14 +292,22 @@ CUDA 内核中 3D 数组的使用将在第 8 章 Stencil 中对模板模式进�
 为了保持算法简单，我们不会根据与目标像素的距离对任何像素的值进行权重。 
 实际上，放置这样的权重在卷积模糊方法中很常见，例如高斯模糊。
 
-{\color{red} Fig 3.7}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F3.7.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 图 3.7 显示了使用 $3 \times 3$ 补丁进行图像模糊的示例。 当计算（行，列）位置处的输出像素值时，
 我们看到补丁以位于（行，列）位置的输入像素为中心。 $3 \times 3$ 补丁跨越三行（row-1、row、row+1）
 和三列（col-1、col、col+1）。 例如，计算(25, 50)处输出像素的9个像素的坐标
 分别为(24, 49)、(24, 50)、(24, 51)、(25, 49)、(25, 50) 、(25, 51)、(26, 49)、(26, 50) 和(26, 51)。
 
-{\color{red} Fig 3.8}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F3.8.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 图 3.8 显示了图像模糊内核。 与 colorToGrayscaleConversion 中使用的策略类似，我们使用每个线程来计算输出像素。 
 也就是说，线程到输出数据的映射保持不变。 因此，在内核的开头，我们看到了熟悉的列索引和行索引的计算（第 03-04 行）。 
@@ -299,6 +331,12 @@ curRow 变量为 row-BLUR\_SIZE$ = (25 - 1) = 24$ 因此，在外循环的第一
 它将像素值累积到运行总和变量 pixVal 中。 第 17 行记录了这样一个事实：通过增加像素变量，
 又将一个像素值添加到运行总和中。 处理完 patch 中的所有像素后，
 第 22 行通过将 pixVal 值除以像素值来计算 patch 中像素的平均值。 它使用行和列的线性化索引将结果写入其输出像素。
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F3.9.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 第 15 行包含一个条件语句，用于保护第 16 行和第 17 行的执行。例如，在计算图像边缘附近的输出像素时，
 补丁可能会超出输入图像的有效范围。 这在图 3.9 中进行了说明，假设有 3 x 3 个补丁。 在情况 1 中，左上角的像素变得模糊。 
@@ -346,7 +384,11 @@ $$
 \mathrm{P}_{\text {row }, \mathrm{col}}=\sum \mathrm{M}_{\text {row }, \mathrm{k}}{ }^{*} \mathrm{~N}_{\mathrm{k}, \mathrm{col}} \quad \text { for } \mathrm{k}=0,1, \ldots \text { Width }-1
 $$
 
-{\color{red} Fig 3.10}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F3.10.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 例如，在图 3.10 中，假设行 $=1$ 且 $\mathrm{col}=5$，
 $$
@@ -365,7 +407,11 @@ $$
 \operatorname{col}=\text { blockIdx.x*blockDim.x }+ \text { threadIdx.x }
 $$
 
-{\color{red} Fig 3.11}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F3.11.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 通过这种一对一映射，行和列线程索引也是其输出元素的行和列索引。 图 3.11 显示了基于线程到数据映射的内核源代码。 
 读者应该立即看到熟悉的计算 row 和 col 的模式（第 03-04 行）以及测试 row 和 col 是否都在范围内的 if 语句（第 05 行）。 
@@ -391,7 +437,11 @@ $$
 然后，每个线程使用 1D 等效索引表达式 row × Width+col 写入其 P 元素（第 10 行）。 
 同样，此索引模式类似于 colorToGrayscaleConversion 内核中使用的索引模式。
 
-{\color{red} Fig 3.12}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F3.12.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 我们现在用一个小例子来说明矩阵乘法内核的执行。 图 3.12 显示了 BLOCK\_WIDTH = 2 的 $4\times 4$P。
 虽然如此小的矩阵和块大小不太现实，但它们允许我们将整个示例放入一张图片中。 P矩阵被分为4个tile，

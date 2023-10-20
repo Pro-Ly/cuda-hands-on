@@ -10,7 +10,11 @@
 从而消除了进出全局内存的大部分流量。 在本章中，我们将研究如何使用不同的内存类型来提高 CUDA 内核的执行性能。
 
 \subsection{内存访问效率的重要性}
-{\color{red} Fig 5.1}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F5.1.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 我们可以通过计算图 3.11 中矩阵乘法内核代码执行最多的部分的预期性能水平来说明内存访问效率的影响，
 该部分在图 5.1 中进行了部分复制。 就执行时间而言，内核最重要的部分是 for 循环，它执行 M 行与 N 列的点积。
@@ -64,7 +68,11 @@ $A_1$ 有效地使用资源并在接近峰值内存带宽的情况下运行，�
 \end{remark}
 
 \subsection{CUDA 内存类型}
-{\color{red} Fig 5.2}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F5.2.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 CUDA 设备包含多种类型的内存，可以帮助程序员提高计算与全局内存访问的比率。 图 5.2 显示了这些 CUDA 设备存储器。 
 在图的底部，我们看到全局内存和常量内存。 这两种类型的存储器都可以由主机写入（W）和读取（R）。 
@@ -94,7 +102,11 @@ CPU 和 GPU 的不同设计目标导致不同的寄存器架构。 正如我们�
 相比之下，CPU 寄存器架构为每个线程专用一组固定的寄存器，而不管线程对寄存器的实际需求如何。
 \end{remark}
 
-{\color{red} Fig 5.3}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F5.3.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 为了充分理解寄存器、共享内存和全局内存之间的区别，我们需要更详细地了解这些不同的内存类型在现代处理器中是如何实现和使用的。 
 正如我们在第 4 章“计算架构和调度”的“Warps 和 SIMD 硬件”边栏中讨论的那样，
@@ -133,7 +145,11 @@ CUDA 设备也不例外。 CUDA 设备中的全局内存映射到图 5.3 中的�
 正如我们在第 4 章“计算架构和调度”中看到的，如果满占用场景中的寄存器使用量超过限制，则应用程序实现的占用率可能会减少。 
 因此，我们还需要尽可能避免过度订阅这一有限的资源。
 
-{\color{red} Fig 5.4}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F5.4.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 图 5.4 显示了 CUDA 设备中的共享内存和寄存器。 尽管两者都是片上存储器，但它们在功能和访问成本方面存在显着差异。 
 共享内存被设计为驻留在处理器芯片上的内存空间的一部分。 
@@ -219,7 +235,11 @@ CUDA 程序员经常使用共享变量来保存在内核执行阶段频繁使用
 一个重要的标准是这些图块上的内核计算可以彼此独立地完成。 请注意，在给定任意核函数的情况下，
 并非所有数据结构都可以划分为图块。
 
-{\color{red} Fig 5.5}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F5.5.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 平铺的概念可以通过第 3 章“多维网格和数据”中的矩阵乘法示例来说明。 图 3.13 显示了矩阵乘法的一个小例子。 
 它对应于图3.11中的核函数。 为了方便参考，我们复制图 5.5 中的示例。 
@@ -232,7 +252,11 @@ $block_{0,0}$ 的 $thread_{0,0}$ 和 $thread_{0,1}$ 对 M 和 N 元素的访问�
 例如，$thread_{0,0}$ 读取 $M_{0,0}$ 和 $N_{0,0}$ ，
 接着依次为 $M_{0,1}$ 和 $N_{1,0}$ 、$M_{0,2}$ 和 $N_{2,0}$ 、$M_{0,3}$ 和 $N_{3,0}$ 。
 
-{\color{red} Fig 5.6}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F5.6.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 图 5.6 显示了 $block_{0,0}$ 中所有线程完成的全局内存访问。 线程按垂直方向列出，访问时间按水平方向从左到右递增。 
 请注意，每个线程在执行期间都会访问 M 的四个元素和 N 的四个元素。 
@@ -254,7 +278,11 @@ $block_{0,0}$ 的 $thread_{0,0}$ 和 $thread_{0,1}$ 对 M 和 N 元素的访问�
 不要超过共享内存的容量。 这可以通过将 M 和 N 矩阵划分为更小的块来实现。 
 这些图块的大小经过选择，以便它们可以适合共享内存。 在最简单的形式中，图块的尺寸等于块的尺寸，如图 5.7 所示。
 
-{\color{red} Fig 5.7}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F5.7.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 在图 5.7 中，我们将 M 和 N 分为 $2 \times 2$ 个图块，如粗线所示。 每个线程执行的点积计算现在分为多个阶段。 
 在每个阶段，块中的所有线程协作将 M 的瓦片和 N 的瓦片加载到共享内存中。 
@@ -272,7 +300,11 @@ M 和 N 两个图块加载到共享内存后，这些元素将用于点积的计
 通过将每个全局内存值加载到共享内存中以便可以多次使用，我们减少了对全局内存的访问次数。 
 在这种情况下，我们将对全局内存的访问次数减少 2 倍。如果图块是 $N \times N$ 元素，读者应该验证减少的次数是否是 N 倍。
 
-{\color{red} Fig 5.8}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F5.8.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 请注意，每个点积的计算现在分两个阶段执行，如图 5.8 中的阶段 1 和阶段 2 所示。 
 在每个阶段中，每个线程将两对输入矩阵元素的乘积累加到 Pvalue 变量中。 
@@ -291,7 +323,11 @@ M 和 N 两个图块加载到共享内存后，这些元素将用于点积的计
 局部性对于在多核 CPU 中实现高性能与在多线程 GPU 中一样重要，我们将在第 6 章“性能注意事项”中回到局部性概念。
 
 \subsection{平铺矩阵乘法内核}
-{\color{red} Fig 5.9}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F5.9.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 我们现在准备提出一个平铺矩阵乘法内核，它使用共享内存来减少全局内存的流量。 
 图 5.9 所示的内核实现了图 5.8 所示的阶段。 在图 5.9 中，第 04 行和第 05 行分别声明 Mds 和 Nds 为共享内存数组。 
@@ -324,7 +360,11 @@ bx 块中的线程之前将有 bx 个线程块，或 (bx * TILE\_WIDTH) 个线�
 回想一下，每个阶段都使用 M 个元素的一个图块和 N 个元素的一个图块。 
 因此，在每个阶段开始时，前面的阶段已处理了 M 和 N 个元素的 ph × TILE\_WIDTH 对。
 
-{\color{red} Fig 5.10}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F5.10.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 在每个阶段，图 5.9 中的第 19 行和第 20 行分别将适当的 M 和 N 元素加载到共享内存中。 
 由于我们已经知道线程要处理的 M 行和 N 列，因此我们现在将重点转向 M 的列索引和 N 的行索引。
@@ -397,7 +437,11 @@ bx 块中的线程之前将有 bx 个线程块，或 (bx * TILE\_WIDTH) 个线�
 在下一节中，我们将提出一个带有边界检查的内核，以消除这些假设。
 
 \subsection{边界检查}
-{\color{red} Fig 5.11}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F5.11.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 我们现在扩展平铺矩阵乘法内核来处理任意宽度的矩阵。 扩展必须允许内核正确处理宽度不是平铺宽度倍数的矩阵。 
 让我们将图 5.7 中的小示例更改为使用 $3 \times 3$ M、N 和 P 矩阵。 修改后的例子如图5.11所示。 
@@ -415,6 +459,12 @@ bx 块中的线程之前将有 bx 个线程块，或 (bx * TILE\_WIDTH) 个线�
 访问超出列末尾的元素时也会出现类似的问题（图 5.11 中 $thread_{1,0}$ 和 $thread_{1,1}$ 进行 N 次访问）。 
 这些访问是对数组分配区域之外的内存位置的访问。 在某些系统中，它们将从其他数据结构返回随机值。 
 在其他系统中，这些访问将被拒绝，导致程序中止。 无论哪种方式，此类访问的结果都是不理想的。
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F5.12.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 从我们到目前为止的讨论来看，有问题的访问似乎只出现在线程执行的最后阶段。 
 这表明我们可以通过在平铺内核执行的最后阶段采取特殊操作来处理它。 不幸的是，事实并非如此。 
@@ -444,7 +494,11 @@ bx 块中的线程之前将有 bx 个线程块，或 (bx * TILE\_WIDTH) 个线�
 最后，只有当线程负责计算有效的 P 元素时，才应存储其最终内积值。 
 此条件的测试是 (Row < Width) \&\& (Col < Width)。 具有附加边界条件检查的内核代码如图 5.13 所示。
 
-{\color{red} Fig 5.13}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F5.13.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 通过边界条件检查，瓦片矩阵乘法内核距离通用矩阵乘法内核仅一步之遥。 
 一般来说，矩阵乘法是针对矩形矩阵定义的：j x k M 矩阵与 k x l N 矩阵相乘会得到 j x l P 矩阵。 
@@ -518,7 +572,11 @@ Mds 和 Nds 都有 256 个元素。 如果我们想改变Mds和Nds的大小，�
 内核代码的其余部分可以使用 Mds 和 Nds 作为数组的基数，并使用线性化索引来访问 Mds 和 Nds 元素。 
 例如，不使用 Mds[ty][tx]，而是使用 Mds[ty * TILE\_WIDTH+tx]。
 
-{\color{red} Fig 5.14}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F5.14.png}
+	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 \subsection{总结}
 总之，现代处理器中程序的执行速度可能受到存储器速度的严重限制。 为了充分利用 CUDA 设备的执行吞吐量，
