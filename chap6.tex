@@ -31,7 +31,10 @@ CUDA 应用程序广泛利用数据并行性。 当然，CUDA 应用程序往往
 下图显示了 DRAM 单元以及访问其内容的路径。 解码器是一种电子电路，使用晶体管驱动连接到数千个单元出口门的线路。 
 线路可能需要很长时间才能完全充电或放电到所需的水平。
 
-{\color{red} Fig}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F6-a.1.png}
+\end{figure}
 
 对于单元来说，更艰巨的挑战是驱动垂直线到读出放大器并允许读出放大器检测其内容。 
 这是基于电荷共享。 栅极释放出细胞中存储的微量电荷。 
@@ -72,7 +75,7 @@ CUDA设备的全局存储器是用DRAM实现的。 数据位存储在小电容�
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F6.1.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{根据行优先顺序将矩阵元素放入线性数组中。}}
 \end{figure}
 
 为了理解如何有效地使用合并硬件，我们需要回顾一下在访问 C 多维数组元素时内存地址是如何形成的。 
@@ -86,7 +89,7 @@ C 和 CUDA 中的多维数组元素根据行优先约定放置到线性寻址内
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F6.2.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{合并访问模式。}}
 \end{figure}
 
 假设图 6.1 中的多维数组是一个矩阵，在矩阵乘法中用作第二个输入矩阵。 
@@ -112,7 +115,7 @@ C 和 CUDA 中的多维数组元素根据行优先约定放置到线性寻址内
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F6.3.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{未合并的访问模式。}}
 \end{figure}
 
 图 6.3 说明了当矩阵按列优先顺序存储时，连续线程如何迭代连续列。 
@@ -138,7 +141,7 @@ C 和 CUDA 中的多维数组元素根据行优先约定放置到线性寻址内
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F6.4.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{应用转角来合并对矩阵 B 的访问，该矩阵以列优先布局存储。}}
 \end{figure}
 
 图 6.4 说明了如何应用转角的示例。 在此示例中，A 是在全局内存中以行优先布局存储的输入矩阵，
@@ -166,7 +169,7 @@ B 是在全局内存中以列优先布局存储的输入矩阵。 它们相乘�
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F6.5.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{减少高速公路系统的交通拥堵。}}
 \end{figure}
 
 内存合并的主要优点是，它通过将多个内存访问合并为一次访问来减少全局内存流量。 
@@ -186,7 +189,7 @@ B 是在全局内存中以列优先布局存储的输入矩阵。 它们相乘�
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F6.6.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{拼车需要人与人之间的同步。}}
 \end{figure}
 
 拼车要求希望拼车的工人妥协并就共同的通勤时间表达成一致。 图 6.6 的上半部分显示了良好的拼车时间表模式。 
@@ -205,7 +208,7 @@ B 是在全局内存中以列优先布局存储的输入矩阵。 它们相乘�
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F6.7.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{DRAM 系统中的通道和存储体。}}
 \end{figure}
 
 正如我们在第 6.1 节中所解释的，DRAM 突发是并行组织的一种形式：并行访问 DRAM 核心阵列中的多个位置。 
@@ -224,7 +227,7 @@ DRAM 系统通常采用另外两种形式的并行组织：存储体(banks)和�
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F6.8.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{储存体提高了通道数据传输带宽的利用率。}}
 \end{figure}
 
 对于每个通道，与其连接的 Bank 数量由充分利用总线数据传输带宽所需的 Bank 数量决定。 如图 6.8 所示。 
@@ -269,7 +272,7 @@ DRAM 系统通常采用另外两种形式的并行组织：存储体(banks)和�
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F6.9.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{将数组元素分配到通道和储存体中。}}
 \end{figure}
 
 图 6.9 显示了将数组 M 的元素分配到通道和组的玩具示例。 我们假设两个元素（8 字节）的小突发大小。 
@@ -293,7 +296,7 @@ M[18] 和 M[19] 将存储在通道 1 的 Bank 0 中，以此类推。
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F6.10.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{矩阵乘法的一个小例子（从图 5.5 复制）。}}
 \end{figure}
 
 我们现在说明并行线程执行和并行内存组织之间的交互。 我们将使用图 5.5 中的示例，复制为图 6.10。 
@@ -302,7 +305,7 @@ M[18] 和 M[19] 将存储在通道 1 的 Bank 0 中，以此类推。
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F6.11.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{每个阶段由线程块加载 M 个元素。}}
 \end{figure}
 
 在内核执行的阶段 0 期间，所有四个线程块都将加载它们的第一个图块。 每个图块涉及的M个元素如图6.11所示。 
@@ -345,7 +348,7 @@ M[18] 和 M[19] 将存储在通道 1 的 Bank 0 中，以此类推。
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F6.12.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{用于平铺矩阵乘法的线程粗化。}}
 \end{figure}
 
 我们使用第 5 章“内存架构和数据局部性”中的平铺矩阵乘法示例演示了线程粗化优化。 
@@ -362,7 +365,7 @@ M[18] 和 M[19] 将存储在通道 1 的 Bank 0 中，以此类推。
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F6.13.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{用于平铺矩阵乘法的线程粗化的代码。}}
 \end{figure}
 
 图 6.13 显示了如何将线程粗化应用于第 5 章“内存架构和数据局部性”中的平铺矩阵乘法代码。 
@@ -402,7 +405,10 @@ M[18] 和 M[19] 将存储在通道 1 的 Bank 0 中，以此类推。
 程序员应首先考虑这些优化。 在本书的第二部分和第三部分中，我们将把此清单中的优化应用于各种并行模式和应用程序，
 以了解它们在不同上下文中的运行方式。 在本节中，我们将简要回顾每个优化及其应用策略。
 
-{\color{red} TABLE 6.1}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F6-a.2.png}
+\end{figure}
 
 表6.1中的第一个优化是最大化SM上线程的占用率。 这种优化在第 4 章“计算架构和调度”中介绍，
 其中强调了拥有比内核多得多的线程的重要性，因为这是一种有足够的工作可用于隐藏核心管道中的长延迟操作的方法。 

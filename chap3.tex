@@ -23,16 +23,28 @@
 例如，以下主机代码可用于调用 vecAddkernel() 内核函数并生成由 32 个块组成的一维网格，每个块由 128 个线程组成。 
 网格中的线程总数为 $128 * 25 = 4096$：
 
-{\color{red} CODE}
+dim3 dimGrid(32, 1, 1);
+
+dim3 dimBlock(128, 1, 1);
+
+vecAddKernel<<<dimGrid, dimBlock>>>(...);
 
 请注意，dimBlock 和 dimGrid 是由程序员定义的主机代码变量。 
 这些变量可以具有任何合法的 C 变量名称，只要它们具有类型 dim3 即可。 例如，以下语句实现与上述语句相同的结果：
 
-{\color{red} CODE}
+dim3 dog(32, 1, 1);
+
+dim3 cat(128, 1, 1);
+
+vecAddKernel<<<dog, cat>>>(...);
 
 网格和块尺寸也可以根据其他变量计算。 例如图2.12中的内核调用可以写成如下：
 
-{\color{red} CODE}
+dim3 dimGrid(ceil(n/256), 1, 1);
+
+dim3 dimBlock(256, 1, 1);
+
+vecAddKernel<<<dimGrid, dimBlock>>>(...);
 
 这允许块的数量随着向量的大小而变化，以便网格将有足够的线程来覆盖所有向量元素。 
 在此示例中，程序员选择将块大小固定为 256。内核调用时变量 n 的值将确定网格的维度。 
@@ -43,7 +55,7 @@
 可以使用算术表达式来指定一维网格和块的配置，而不是使用 dim3 变量。 
 在这种情况下，CUDA编译器简单地将算术表达式作为x维度，并假设y和z维度为1。这给我们提供了如图2.12所示的内核调用语句：
 
-{\color{red} CODE}
+vecAddKernel<<<ceil(n/256.0), 256>>>(...);
 
 熟悉 C++ 的读者会意识到，这种一维配置的“速记”约定利用了 C++ 构造函数和默认参数的工作方式。 
 dim3 构造函数的参数默认值为 1。当在需要 dim3 的地方传递单个值时，该值将传递给构造函数的第一个参数，
@@ -73,13 +85,17 @@ gridDim.y 和 gridDim.z 的允许值范围为 1 到 $2^{16} - 1$(65,535)。
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F3.1.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{CUDA 网格组织的多维示例。}}
 \end{figure}
 
 网格及其块不需要具有相同的维度。 网格可以具有比其块更高的维度，反之亦然。 例如，图 3.1 显示了一个小型玩具网格示例，
 其 gridDim 为 (2, 2, 1)，blockDim 为 (4, 2, 2)。 可以使用以下主机代码创建这样的网格：
 
-{\color{red} CODE}
+dim3 dimGrid(2, 2, 1);
+
+dim3 dimBlock(4, 2, 2);
+
+KernelFunction<<<dimGrid, dimBlock>>>(...);
 
 图 3.1 中的网格由组织成 $2 \times 2$ 阵列的四个块组成。 每个块都标有（blockIdx.y，blockIdx.x）。 
 例如，块 (1,0) 具有 blockIdx.y = 1 和 blockIdx.x = 0。请注意，块和线程标签的顺序是最高维度排在前面。 
@@ -98,7 +114,7 @@ gridDim.y 和 gridDim.z 的允许值范围为 1 到 $2^{16} - 1$(65,535)。
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F3.2.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{使用2D线程网格处理62*76的图片P。}}
 \end{figure}
 
 1D、2D 或 3D 线程组织的选择通常基于数据的性质。 例如，图片是像素的二维阵列。 
@@ -115,11 +131,14 @@ gridDim.y 和 gridDim.z 的允许值范围为 1 到 $2^{16} - 1$(65,535)。
 粗线标记了块边界。 阴影区域描绘了覆盖像素的线。 每个线程被分配来处理一个像素，
 该像素的 y 和 x 坐标源自其 blockIdx、blockDim 和 threadIdx 变量值：
 
-{\color{red} CODE}
+Vertical(row) row coordinate = blockIdx.y * blockDim.y + threadIdx.y
+
+Horizontal(Column) coordinate = blockIdx.x * blockDim.x + threadIdx.x
 
 例如，块(1,0)的线程(0,0)要处理的Pin元素可以如下标识：
-
-{\color{red} CODE}
+$$
+Pin_{blockIdx.y*blockDim.y+threadIdx.y, blockIdx.x*blockDim.x+threadIdx.x} = Pin_{1*16+0,0*16+0} = Pin_{16.0}
+$$
 
 请注意，在图 3.2 中，我们在 y 方向上有两个额外的线程，在 x 方向上有四个额外的线程。 
 也就是说，我们将生成 $64 \times 80$ 个线程来处理 $62 \times 76$ 个像素。 
@@ -132,7 +151,11 @@ gridDim.y 和 gridDim.z 的允许值范围为 1 到 $2^{16} - 1$(65,535)。
 输出图片已分配在设备内存中，可以通过指针变量 Pout\_d 进行访问。 
 下面的宿主代码可以调用一个2D内核colorToGrayscaleConversion来处理图片，如下：
 
-{\color{red} CODE}
+dim3 dimGrid(ceil(m/16.0), ceil(n/16.0), 1);
+
+dim3 dimBlock(16, 16, 2);
+
+colorToGrayscaleConversion<<<dimGrid, dimBlock>>>(Pin\_d, Pout\_d, m, n);
 
 在此示例中，为简单起见，我们假设块的尺寸固定为 $16 \times 16$。另一方面，网格的尺寸取决于图片的尺寸。 
 为了处理 $1500 \times 2000$（300 万像素）图片，我们将生成 11,750 个块：y 方向 94 个，x 方向 125 个。 
@@ -157,7 +180,7 @@ gridDim.y 和 gridDim.z 的允许值范围为 1 到 $2^{16} - 1$(65,535)。
 需要多个字节的变量（浮点型 4 个字节，双精度型 8 个字节）存储在连续的字节位置中。 
 当从内存空间访问数据值时，处理器给出起始地址（起始字节位置的地址）和所需的字节数。
 
-大多数现代计算机至少有 4G 字节大小的位置，其中每个 G 为 $1,073,741,824(2^{30})$。 
+大多数现代计算机至少有 4G 字节大小的位置，其中每个 G 为 1,073,741,824($2^{30}$)。 
 所有位置都标有范围从 0 到所使用的最大数字的地址。 由于每个位置只有一个地址，因此我们说内存空间具有“扁平”组织。 
 结果，所有多维数组最终都会“展平”为等效的一维数组。 虽然 C 程序员可以使用多维数组语法来访问多维数组的元素，
 但编译器会将这些访问转换为指向数组起始元素的基指针，以及根据这些多维索引计算出的一维偏移量。
@@ -174,7 +197,8 @@ $M_{j,i}$ 相当于 C 表达式 M[j][i]，但可读性稍好一些。 图 3.3 �
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F3.3.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{2D C 数组的行优先布局。 结果是一个等效的一维数组，
+	通过索引表达式 j × Width+i 访问位于每行 Width 元素数组的第 j 行第 i 列中的元素。}}
 \end{figure}
 
 线性化二维数组的另一种方法是将同一列的所有元素放置在连续的位置。 然后将这些列依次放入内存空间中。 
@@ -187,18 +211,19 @@ $M_{j,i}$ 相当于 C 表达式 M[j][i]，但可读性稍好一些。 图 3.3 �
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F3.4.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{colorToGrayscaleConversion 的源代码，具有 2D 线程映射到数据的功能。}}
 \end{figure}
 
 现在我们准备研究colorToGrayscaleConversion的源代码，如图3.4所示。 
 内核代码使用以下公式将每个彩色像素转换为其对应的灰度像素：
-
-{\color{red} CODE}
+$$
+L = 0.21*r+0.72*g+0.07*b
+$$
 
 水平方向总共有 $blockDim.x \times gridDim.x$ 线程。 与 vecAddKernel 示例类似，
 以下表达式生成从 0 到 $blockDim.x \times gridDim.x - 1$ 的每个整数值（第 06 行）：
 
-{\color{red} CODE}
+col = blockIdx.x*blockDim.x+threadIdx.x
 
 我们知道 $gridDim.x \times blockDim.x$ 大于或等于 width（从主机代码传入的 m 值）。 
 我们的线程数至少与水平方向上的像素数一样多。 我们还知道，垂直方向上的线程数至少与像素数一样多。 
@@ -208,8 +233,12 @@ $M_{j,i}$ 相当于 C 表达式 M[j][i]，但可读性稍好一些。 图 3.3 �
 由于每行都有宽度像素，我们可以为行 row 和列 col 处的像素生成一维索引，即 row × width+col （第 10 行）。 
 此 1D 索引 greyOffset 是 Pout 的像素索引，因为输出灰度图像中的每个像素都是 1 个字节（无符号字符）。 
 以我们的 $62 \times 76$ 图像为例，块 (1,0) 的线程 (0,0) 计算出 Pout 像素的线性化一维索引，公式如下：
-
-{\color{red} CODE}
+$$
+\begin{aligned}
+& \text { Pout }_{\text {blockIdx.y*blockDim.y }+ \text { threadIdx.y,blockIdx.x*blockDim.x }+ \text { threadIdx.x }} \\
+& =\text { Pout }_{1 * 16+0,0 * 16+0}=\text { Pout }_{16,0}=\operatorname{Pout}[16 * 76+0]=\operatorname{Pout}[1216]
+\end{aligned}
+$$
 
 至于 Pin，我们需要将灰色像素索引乘以 32F2F
 \footnote{我们假设 CHANNELS 是一个值为 3 的常量，并且它的定义在核函数之外。}
@@ -218,15 +247,19 @@ $M_{j,i}$ 相当于 C 表达式 M[j][i]，但可读性稍好一些。 图 3.3 �
 我们从 Pin 数组的三个连续字节位置读取 r、g 和 b 值（第 14-16 行），执行灰度像素值的计算，
 并使用grayOffset 将该值写入 Pout 数组（第 19 行）。 在我们的 $62 \times 76$ 图像示例中，
 由块 (1,0) 的线程 (0,0) 处理的 Pin 像素的第一个分量的线性化一维索引可以使用以下公式计算：
-
-{\color{red} CODE}
+$$
+\begin{aligned}
+& \operatorname{Pin}_{\text {blockIdx.y*blockDim.y }+ \text { threadIdx.y,blockIdx. } x^{*} \text { blockDim.x } x+\text { threadIdx.x }}=\operatorname{Pin}_{1 * 16+0,0 * 16+0} \\
+& =\operatorname{Pin}_{16,0}=\operatorname{Pin}\left[16^{*} 76^{*} 3+0\right]=\operatorname{Pin}[3648]
+\end{aligned}
+$$
 
 正在访问的数据是从字节偏移量 3648 开始的 3 个字节。
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F3.5.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{用 16 $\times$ 16 个块覆盖 76 $\times$ 62 的图片。}}
 \end{figure}
 
 图 3.5 说明了在处理 $62 \times 76$ 示例时 colorToGrayscaleConversion 的执行情况。 
@@ -261,7 +294,7 @@ $M_{j,i}$ 相当于 C 表达式 M[j][i]，但可读性稍好一些。 图 3.3 �
 这是通过将数组的每个“平面”依次放入地址空间来完成的。 假设程序员使用变量 m 和 n 分别跟踪 3D 数组中的列数和行数。 
 程序员在调用内核时还需要确定 blockDim.z 和 gridDim.z 的值。 在内核中，数组索引将涉及另一个全局索引：
 
-{\color{red} CODE}
+int plane = blockIdx.z * blockDim.z + threadIdx.z
 
 对 3D 数组 P 的线性化访问将采用 $P[plane * m * n +row * m+col]$ 的形式。 
 处理 3D P 数组的内核需要检查所有三个全局索引（plane、row 和 col）是否落在数组的有效范围内。 
@@ -277,7 +310,7 @@ CUDA 内核中 3D 数组的使用将在第 8 章 Stencil 中对模板模式进�
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F3.6.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{原始图像（左）和模糊版本（右）。}}
 \end{figure}
 
 图像模糊可以消除像素值的突然变化，同时保留对于识别图像关键特征至关重要的边缘。 图 3.6 说明了图像模糊的效果。 
@@ -295,7 +328,7 @@ CUDA 内核中 3D 数组的使用将在第 8 章 Stencil 中对模板模式进�
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F3.7.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{每个输出像素是输入图像中周围像素块及其自身的平均值。}}
 \end{figure}
 
 图 3.7 显示了使用 $3 \times 3$ 补丁进行图像模糊的示例。 当计算（行，列）位置处的输出像素值时，
@@ -306,7 +339,7 @@ CUDA 内核中 3D 数组的使用将在第 8 章 Stencil 中对模板模式进�
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F3.8.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{图像模糊内核。}}
 \end{figure}
 
 图 3.8 显示了图像模糊内核。 与 colorToGrayscaleConversion 中使用的策略类似，我们使用每个线程来计算输出像素。 
@@ -335,7 +368,7 @@ curRow 变量为 row-BLUR\_SIZE$ = (25 - 1) = 24$ 因此，在外循环的第一
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F3.9.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{处理图像边缘附近像素的边界条件。}}
 \end{figure}
 
 第 15 行包含一个条件语句，用于保护第 16 行和第 17 行的执行。例如，在计算图像边缘附近的输出像素时，
@@ -387,7 +420,7 @@ $$
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F3.10.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{通过平铺 P 使用多个块进行矩阵乘法。}}
 \end{figure}
 
 例如，在图 3.10 中，假设行 $=1$ 且 $\mathrm{col}=5$，
@@ -410,7 +443,7 @@ $$
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F3.11.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{使用一个线程计算一个 P 元素的矩阵乘法内核。}}
 \end{figure}
 
 通过这种一对一映射，行和列线程索引也是其输出元素的行和列索引。 图 3.11 显示了基于线程到数据映射的内核源代码。 
@@ -425,22 +458,22 @@ $$
 将两个元素相乘，并将乘积累加到 Pvalue 中（第 08 行）。
 
 让我们首先关注在 for 循环中访问 M 元素。 使用行主序将 M 线性化为等效的一维数组。 
-即M的行从第0行开始依次放置在内存空间中。 因此，第 1 行的起始元素是 M[1 × Width]，因为我们需要考虑第 0 行的所有元素。
-一般来说，第 1 行的起始元素是 M[row × Width]。 由于一行的所有元素都放置在连续的位置，
-因此第 rowth 行的第 k 个元素位于 M[row × Width+k]。 这个线性化数组偏移量就是我们在图 3.11（第 08 行）中使用的。
+即M的行从第0行开始依次放置在内存空间中。 因此，第 1 行的起始元素是 M[1 $\times$ Width]，因为我们需要考虑第 0 行的所有元素。
+一般来说，第 1 行的起始元素是 M[row $\times$ Width]。 由于一行的所有元素都放置在连续的位置，
+因此第 rowth 行的第 k 个元素位于 M[row $\times$ Width+k]。 这个线性化数组偏移量就是我们在图 3.11（第 08 行）中使用的。
 
 现在我们将注意力转向访问N。如图3.11所示，colth列的起始元素是第0行的colth元素，即N[col]。 
 访问 colth 列中的下一个元素需要跳过整行。 这是因为同一列的下一个元素与下一行中的相同元素。 
-因此，colth 列的第 k 个元素是 N[k × Width+col]（第 08 行）。
+因此，colth 列的第 k 个元素是 N[k $\times$ Width+col]（第 08 行）。
 
 执行退出 for 循环后，所有线程的 Pvalue 变量中都有其 P 元素值。 
-然后，每个线程使用 1D 等效索引表达式 row × Width+col 写入其 P 元素（第 10 行）。 
+然后，每个线程使用 1D 等效索引表达式 row $\times$ Width+col 写入其 P 元素（第 10 行）。 
 同样，此索引模式类似于 colorToGrayscaleConversion 内核中使用的索引模式。
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F3.12.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{matrixMulKernel 的一个小型执行示例。}}
 \end{figure}
 
 我们现在用一个小例子来说明矩阵乘法内核的执行。 图 3.12 显示了 BLOCK\_WIDTH = 2 的 $4\times 4$P。
@@ -448,23 +481,31 @@ $$
 每个块计算一个tile。 我们通过创建由 $2\times 2$ 个线程数组组成的块来实现这一点，每个线程计算一个 P 元素。 
 在该示例中，块 (0,0) 的线程 (0,0) 计算 $P_{0,0}$ ，而块 (1,0) 的线程 (0,0) 计算 $P_{2,0}$。
 
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F3.13.png}
+	\caption{\textit{一个线程块的矩阵乘法运算。}}
+\end{figure}
+
 matrixMulKernel 中的 row 和 col 索引标识要由线程计算的 P 元素。 行索引还标识 M 的行，
-列索引标识 N 的列作为线程的输入值。 图 3.13 说明了每个线程块中的乘法操作。 
+列索引标识 N 的列作为线程的输入值。 图 3.13 说明了每个线程块中的乘法运算。 
 对于小矩阵乘法示例，块 (0,0) 中的线程产生四个点积。 块(0,0)中线程(1,0)的行索引和列索引分别为$0*0 + 1 = 1$
 和$0 * 0 + 0 = 0$。 因此，线程映射到 $P_{1,0}$ 并计算 M 的第 1 行和 N 的第 0 列的点积。
 
 让我们看一下图 3.11 中线程 (0,0) 在块 (0,0) 中的 for 循环的执行情况。 
-在迭代 $0(k = 0)$ 期间，row × Width + k = 0 * 4 + 0 = 0 和 k × Width + col = 0 * 4 + 0 = 0。
+在迭代 $0(k = 0)$ 期间，row $\times$ Width + k = 0 * 4 + 0 = 0 和 k $\times$ Width + col = 0 * 4 + 0 = 0。
 因此，访问的输入元素是 M[0] 和 N [0]，它们是 1D 等价的 $M_{0,0}$ 和 $N_{0,0}$ 。 
 请注意，这些确实是 M 的第 0 行和 N 的第 0 列的第 0 个元素。在迭代 $1(k = 1)$ 期间，
-row × Width + k = 0 * 4 + 1 = 1 和 k × Width + col = 1 × 4 + 0 = 4。因此 我们正在访问 M[1] 和 N[4]，
+row $\times$ Width + k = 0 * 4 + 1 = 1 和 k $\times$ Width + col = 1 $\times$ 4 + 0 = 4。
+因此 我们正在访问 M[1] 和 N[4]，
 它们是 $M_{0,1}$ 和 $N_{1,0}$ 的一维等价物。 这些是 M 的第 0 行和 N 的第 0 列的第一个元素。
-在迭代 $2(k = 2)$ 期间， row × Width + k = 0 × 4 + 2 = 2 和 k × Width + col = 2 × 4 + 0 = 8，
+在迭代 $2(k = 2)$ 期间， row $\times$ Width + k = 0 $\times$ 4 + 2 = 2 
+和 k $\times$ Width + col = 2 $\times$ 4 + 0 = 8，
 结果为 M [2]和N[8]。 因此，访问的元素是 $M_{0,2}$ 和 $N_{2,0}$ 的一维等效项。
-最后，在迭代 3 (k = 3) 期间，row × Width + k = 0 × 4 + 3 = 3 
-和 k × Width + col = 3 × 4 + 0 = 12，结果是 M[3] 和 N[12]，即 M 的一维等价物 $M_{0,3}$ 和 $N_{3,0}$。 
+最后，在迭代 3 (k = 3) 期间，row $\times$ Width + k = 0 $\times$ 4 + 3 = 3 
+和 k $\times$ Width + col = 3 $\times$ 4 + 0 = 12，结果是 M[3] 和 N[12]，即 M 的一维等价物 $M_{0,3}$ 和 $N_{3,0}$。 
 现在我们已经验证了 for 循环在块 (0,0) 中对线程 (0,0) 执行 M 第 0 行和 N 第 0 列之间的内积。 
-循环结束后，线程写入P[行×宽度+列]，即P[0]。 这是 $P_{0,0}$ 的一维等效项，
+循环结束后，线程写入P[行$\times$ 宽度+列]，即P[0]。 这是 $P_{0,0}$ 的一维等效项，
 因此块 (0,0) 中的线程 (0,0) 成功计算了 M 的第 0 行和 N 的第 0 列之间的内积，并将结果存放在 $P_{0,0}$ 中。
 
 我们将把它作为一个练习，让读者手动执行和验证块 (0,0) 或其他块中其他线程的 for 循环。

@@ -15,7 +15,7 @@
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F4.1.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{支持 CUDA 的 GPU 架构。}}
 \end{figure}
 
 图 4.1 显示了 CUDA C 程序员对典型支持 CUDA 的 GPU 架构的高级视图。 它被组织成一系列高度线程化的流式多处理器（SM）。 
@@ -35,7 +35,7 @@ GPU 还配备了千兆字节的片外设备内存，在图 4.1 中称为“全�
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F4.2.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{流式多处理器 (SM) 的线程块分配。}}
 \end{figure}
 
 图 4.2 说明了块到 SM 的分配。 多个块可能同时分配给同一个 SM。 例如，在图4.2中，每个SM分配了三个块。 
@@ -67,7 +67,11 @@ CUDA 允许同一块中的线程使用屏障同步函数 \_\_syncthreads() 协�
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F4.3.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{屏障同步的执行示例。 箭头代表一段时间内的执行活动。 
+	垂直曲线标记每个线程执行\_\_syncthreads语句的时间。 
+	垂直曲线右侧的空白区域描述了每个线程等待所有线程完成的时间。 
+	竖线标记最后一个线程执行\_\_syncthreads语句的时间，
+	之后所有线程都可以继续执行\_\_syncthreads语句之后的语句。}}
 \end{figure}
 
 图 4.3 说明了屏障同步的执行过程。 块中有N个线程。 时间从左向右。 有些线程较早到达屏障同步语句，有些则晚得多。 
@@ -76,7 +80,7 @@ CUDA 允许同一块中的线程使用屏障同步函数 \_\_syncthreads() 协�
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F4.4.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{\_\_syncthreads() 的错误使用}}
 \end{figure}
 
 在 CUDA 中，如果存在 \_\_syncthreads() 语句，则它必须由块中的所有线程执行。 
@@ -101,7 +105,7 @@ CUDA 运行时系统通过将执行资源分配给块中的所有线程作为一
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F4.5.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{块之间缺乏同步约束使得 CUDA 程序具有透明的可扩展性。}}
 \end{figure}
 
 这导致我们在 CUDA 屏障同步设计中进行重要的权衡。 通过不允许不同块中的线程彼此执行屏障同步，
@@ -129,7 +133,7 @@ CUDA GPU 中的线程调度是一个硬件实现概念，因此必须在特定�
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F4.6.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{块被划分为线程束以进行线程调度。}}
 \end{figure}
 
 Warp是SM中线程调度的单位。 图 4.6 显示了实现中将块划分为 warp 的情况。 
@@ -153,7 +157,7 @@ threadIdx.y为2的线程将放置在threadIdx.y为2的线程之后。 其threadI
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F4.7.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{将 2D 线程放置到线性布局中。}}
 \end{figure}
 
 图 4.7 显示了将二维块的线程放入线性布局的示例。 上半部分显示了块的二维视图。 
@@ -174,7 +178,7 @@ threadIdx.y为2的线程将放置在threadIdx.y为2的线程之后。 其threadI
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F4.8.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{流式多处理器被组织成用于 SIMD 执行的处理块。}}
 \end{figure}
 
 SM 旨在按照单指令、多数据 (SIMD) 模型执行 warp 中的所有线程。 也就是说，在任何时刻，
@@ -196,7 +200,10 @@ SIMD 的优点是控制硬件（例如指令获取/调度单元）的成本由�
 冯诺依曼模型如下图所示。 计算机具有 I/O（输入/输出），允许向系统提供程序和数据并从系统生成程序和数据。 
 为了执行程序，计算机首先将程序及其数据输入到存储器中。
 
-{\color{red} Fig}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F4-a.1.png}
+\end{figure}
 
 该程序由指令集合组成。 控制单元维护一个程序计数器（PC），其中包含下一条要执行的指令的存储器地址。 
 在每个“指令周期”中，控制单元使用 PC 将指令提取到指令寄存器 (IR) 中。 然后检查指令位以确定计算机所有组件要采取的操作。 
@@ -207,7 +214,10 @@ SIMD 的优点是控制硬件（例如指令获取/调度单元）的成本由�
 相同的控制信号（图 4.8 中从控制单元到处理单元的箭头）发送到多个处理单元，
 每个处理单元对应 SM 中的一个核心，每个处理单元执行 warp 中的一个线程。
 
-{\color{red} Fig}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F4-a.2.png}
+\end{figure}
 
 由于所有处理单元均由控制单元的指令寄存器（IR）中的相同指令控制，
 因此它们的执行差异是由于寄存器文件中的数据操作数值不同而造成的。 这在处理器设计中称为单指令多数据（SIMD）。 
@@ -233,7 +243,7 @@ SIMD 的优点是控制硬件（例如指令获取/调度单元）的成本由�
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F4.9.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{在 if-else 语句处 warp 发散的示例。}}
 \end{figure}
 
 图 4.9 显示了 warp 如何执行发散的 if-else 语句的示例。 
@@ -248,7 +258,7 @@ SIMD 的优点是控制硬件（例如指令获取/调度单元）的成本由�
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figs/F4.10.png}
-	\caption{\textit{\color{red} vecAdd 函数中主机代码的完整版本。}}
+	\caption{\textit{for 循环中 warp 发散的示例。}}
 \end{figure}
 
 其他控制流结构中也可能出现分支。 图 4.10 显示了 warp 如何执行发散 for 循环的示例。 
@@ -439,7 +449,9 @@ GPU 的计算能力往往会一代又一代地增强。 Ampere A100 GPU 的计�
 CUDA运行时系统（设备驱动程序）有一个API函数cudaGetDeviceCount，它返回系统中可用的CUDA设备的数量。 
 主机代码可以使用以下语句找出可用的 CUDA 设备的数量：
 
-{\color{red} CODE}
+int devCount;
+
+cudaGetDeviceCount(\&devCount);
 
 虽然这可能并不明显，但现代 PC 系统通常有两个或更多 CUDA 设备。 这是因为许多 PC 系统都配备了一个或多个“集成”GPU。 
 这些 GPU 是默认图形单元，提供基本功能和硬件资源，以便为现代基于窗口的用户界面执行最少的图形功能。 
@@ -450,7 +462,10 @@ CUDA 运行时对系统中所有可用设备进行编号，从 0 到 devCount-1�
 它提供了一个 API 函数 cudaGetDeviceProperties，该函数返回其编号作为参数给出的设备的属性。 
 例如，我们可以在主机代码中使用以下语句来迭代可用设备并查询其属性：
 
-{\color{red} CODE}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F4-a.3.png}
+\end{figure}
 
 内置类型 cudaDeviceProp 是一个 C 结构类型，其字段表示 CUDA 设备的属性。 
 读者可参考《CUDA C 编程指南》了解该类型的所有字段。 我们将讨论其中一些与向线程分配执行资源特别相关的字段。 
