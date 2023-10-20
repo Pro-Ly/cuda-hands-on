@@ -33,16 +33,22 @@
 图像行的格式为 (r g b) (r g b) ... (r g b)，如下面的概念图所示。 
 每个元组指定红色 (R)、绿色 (G) 和蓝色 (B) 的混合。 也就是说，
 对于每个像素，r、g、b 值代表渲染该像素时红、绿、蓝光源的强度（0 为暗，1 为全强度）。
-
-{\color{red} Fig}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F2-a1.png}
+\end{figure}
 
 这三种颜色的实际允许混合因行业指定的颜色空间而异。 
-这里，$AdbobeRGB^{TM}$ 颜色空间中三种颜色的有效组合显示为三角形的内部。 
+这里，AdbobeRGB$^{TM}$ 颜色空间中三种颜色的有效组合显示为三角形的内部。 
 每个混合的垂直坐标（y 值）和水平坐标（x 值）显示应为 G 和 R 的像素强度分数。像素强度的剩余分数 (1-y-x) 应分配给 B。 
 渲染图像时，每个像素的 r、g、b 值用于计算像素的总强度（亮度）以及混合系数（x、y、1-y-x）。
 \end{remark}
 
-{\color{red} Fig 2.2}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F2.2.png}
+	\caption{\textit{图像到灰度转换中的数据并行性。 像素可以彼此独立地计算。}}
+\end{figure}
 
 如果我们将输入视为由 RGB 值数组 I 组织的图像，并将输出视为相应的亮度值数组 O，则我们得到如图 2.2 所示的简单计算结构。 
 例如，根据上式计算I[0]中RGB值的加权和，生成O[0]； O[1]是通过计算I[1]中RGB值的加权和生成的； 
@@ -76,6 +82,12 @@ CUDA C 程序的结构反映了计算机中主机（CPU）和一个或多个设�
 人们可以将设备代码添加到任何源文件中。 设备代码清楚地标有特殊的 CUDA C 关键字。 
 设备代码包括函数或内核，其代码以数据并行方式执行。
 
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F2.3.png}
+	\caption{\textit{CUDA 程序的执行。}}
+\end{figure}
+
 CUDA 程序的执行如图 2.3 所示。 执行从主机代码（CPU 串行代码）开始。 当调用内核函数时，
 设备上会启动大量线程来执行内核。 由内核调用启动的所有线程统称为网格。 这些线程是 CUDA 平台中并行执行的主要工具。 
 图 2.3 显示了两个线程网格的执行情况。 我们将很快讨论这些网格是如何组织的。 
@@ -101,13 +113,17 @@ CUDA 程序的执行如图 2.3 所示。 执行从主机代码（CPU 串行代�
 \end{remark}
 
 \subsection{向量加法核函数}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F2.4.png}
+	\caption{\textit{一个简单的传统向量加法 C 代码示例。}}
+\end{figure}
+
 我们使用向量加法来演示 CUDA C 程序结构。 向量加法可以说是最简单的数据并行计算——相当于顺序编程中的“Hello World”。 
 在我们展示向量加法的内核代码之前，首先回顾一下传统向量加法（主机代码）函数的工作原理会很有帮助。 
 图 2.4 显示了一个简单的传统 C 程序，由主函数和向量加法函数组成。 在我们所有的示例中，每当需要区分主机和设备数据时，
 我们都会在主机使用的变量名称后添加“\_h”，在设备使用的变量名称后添加“\_d”以 提醒我们自己这些变量的预期用途。 
 由于图 2.4 中只有主机代码，因此我们只能看到后缀为“\_h”的变量。
-
-{\color{red} Fig 2.4}
 
 \begin{remark}[C语言中的指针]
 	图 2.4 中的函数参数 A、B 和 C 是指针。 在C语言中，可以使用指针来访问变量和数据结构。 浮点变量 V 可以这样声明：
@@ -143,7 +159,11 @@ P[i] 成为 A[i] 的同义词。 事实上，数组名称 $A$ 本身就是一个
 该函数分别通过指针A\_h、B\_h和C\_h读取A和B的元素并写入C的元素。 
 当vecAdd函数返回时，main函数中的后续语句就可以访问C的新内容。
 
-{\color{red} Fig 2.5}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F2.5.png}
+	\caption{\textit{将工作移至设备的修订版 vecAdd 函数的概述。}}
+\end{figure}
 
 并行执行向量加法的一种直接方法是修改 vecAdd 函数并将其计算移至设备。 这种修改后的 vecAdd 函数的结构如图 2.5 所示。 
 该函数的第 1 部分在设备 (GPU) 内存中分配空间来保存 A、B 和 C 向量的副本，并将 A 和 B 向量从主机内存复制到设备内存。 
@@ -172,7 +192,11 @@ CUDA运行时系统（通常在主机上运行）提供应用程序编程接口�
 将 A 和 B 从主机传输到设备； 向量相加后将 C 从设备传输到主机； 并释放A、B、C的设备全局内存。
 我们首先解释内存分配和释放函数。
 
-{\color{red} Fig 2.6}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F2.6.png}
+	\caption{\textit{用于管理设备全局内存的 CUDA API 函数。}}
+\end{figure}
 
 图 2.6 显示了两个用于分配和释放设备全局内存的 API 函数。 
 可以从主机代码调用 cudaMalloc 函数来为对象分配一块设备全局内存。 
@@ -196,7 +220,13 @@ cudaMalloc 函数的第二个参数给出要分配的数据的大小（以字节
 
 我们现在用下面简单的代码示例来说明cudaMalloc和cudaFree的使用：
 
-{\color{red} CODE}
+float *A\_d 
+
+int size=n * sizeof(float);
+
+cudaMalloc((void ** )\&A\_d, size);
+
+... cudaFree(A\_d);
 
 这是图 2.5 中示例的延续。 为了清楚起见，我们在指针变量后面加上“\_d”后缀，以指示它指向设备全局内存中的对象。 
 传递给 cudaMalloc 的第一个参数是转换为 void 指针的指针 A\_d（即 \&A\_d）的地址。 
@@ -213,7 +243,11 @@ A\_d、B\_d 和 C\_d 中的地址指向设备全局内存中的位置。 这些�
 读者应该使用类似的 B\_d 和 C\_d 指针变量声明及其相应的 cudaMalloc 调用来完成图 2.5 中 vecAdd 示例的第 1 部分。 
 此外，图 2.5 中的第 3 部分可以通过调用 B\_d 和 C\_d 的 cudaFree 来完成。
 
-{\color{red} Fig 2.7}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F2.7.png}
+	\caption{\textit{CUDA API 函数用于主机和设备之间的数据传输。}}
+\end{figure}
 
 一旦主机代码在设备全局存储器中为数据对象分配了空间，它就可以请求将数据从主机传输到设备。 
 这是通过调用 CUDA API 函数之一来完成的。 图 2.7 显示了这样一个 API 函数 cudaMemcpy。 
@@ -227,13 +261,23 @@ vecAdd 函数调用 cudaMemcpy 函数，在相加之前将 A\_h 和 B\_h 向量�
 两个符号常量 cudaMemcpyHostToDevice 和 cudaMemcpyDeviceToHost 是 CUDA 编程环境可识别的预定义常量。 
 请注意，通过正确排序源指针和目标指针并使用适合传输类型的常量，可以使用同一函数在两个方向上传输数据。
 
-{\color{red} CODE}
+cudaMemcpy(A\_d, A\_h, size, cudaMemcpyHostToDevice); 
+
+cudaMemcpy(B\_d, B\_h, size, cudaMemcpyHostToDevice); 
+
+...
+
+cudaMemcpy(C\_h, C\_d, size, cudaMemcpyDeviceToHost);
 
 总而言之，图2.4中的主程序调用vecAdd，它也在主机上执行。 vecAdd 函数如图 2.5 所示，在设备全局内存中分配空间，
 请求数据传输，并调用执行实际向量加法的内核。 我们将这种类型的主机代码称为调用内核的存根。 
 我们在图 2.8 中展示了 vecAdd 函数的更完整版本。
 
-{\color{red} Fig 2.8}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F2.8.png}
+	\caption{\textit{vecAdd() 的更完整版本。}}
+\end{figure}
 
 与图2.5相比，图2.8中的vecAdd函数对于第1部分和第3部分来说是完整的。第1部分为A\_d、B\_d和C\_d分配设备全局内存，
 并将A\_h传输到A\_d，将B\_h传输到B\_d。 这是通过调用 cudaMalloc 和 cudaMemcpy 来完成的功能。 
@@ -252,7 +296,16 @@ cudaMalloc((void $\left.{ }^{* *}\right) \& A \_d$, size $)$;
 
 在实践中，我们应该用测试错误条件的代码包围调用并打印出错误消息，以便用户可以知道发生了错误。 此类检查代码的简单版本如下：
 
-{\color{red} Fig}
+cudaError\_t err = cudaMalloc((void**) \&A\_d, size);
+
+if (error != cudaSuccess) \{
+
+	printf(“\%s in \%s at line \%d \textbackslash n”, 
+	        cudaGetErrorString(err), \_\_FILE\_\_, \_\_LINE\_\_);
+
+	exit(EXIT\_FAILURE); 
+
+\}
 
 这样，如果系统的设备内存不足，用户将收到有关情况的通知。 这可以节省许多小时的调试时间。
 
@@ -274,7 +327,11 @@ cudaMalloc((void $\left.{ }^{* *}\right) \& A \_d$, size $)$;
 图 2.9 显示了一个示例，其中每个块由 256 个线程组成。 
 每个线程都由一个来自方框的卷曲箭头表示，该方框标有块中线程的索引号。
 
-{\color{red} Fig 2.9}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F2.9.png}
+	\caption{\textit{网格中的所有线程都执行相同的内核代码。}}
+\end{figure}
 
 \begin{remark}[内置变量]
 	许多编程语言都有内置变量。 这些变量具有特殊的含义和目的。 
@@ -322,14 +379,22 @@ blockIdx 变量为块中的所有线程提供一个公共块坐标。 在图 2.9
 因此这些线程覆盖了原始循环的前 768 次迭代。 通过启动具有更多块的网格，可以处理更大的向量。 
 通过启动具有 n 个或更多线程的网格，可以处理长度为 n 的向量。
 
-{\color{red} Fig 2.10}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F2.10.png}
+	\caption{\textit{向量加法核函数。}}
+\end{figure}
 
 图 2.10 显示了向量加法的核函数。 请注意，我们不在内核中使用“\_h”和“\_d”约定，因为不存在潜在的混淆。 
 在我们的示例中，我们将无法访问主机内存。 内核的语法是 ANSI C，并带有一些值得注意的扩展。 
 首先，在 vecAddKernel 函数的声明前面有一个 CUDA-C 特定关键字“\_\_global\_\_”。 
 该关键字指示该函数是一个内核，并且可以调用它来在设备上生成线程网格。
 
-{\color{red} Fig 2.11}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F2.11.png}
+	\caption{\textit{用于函数声明的 CUDA C 关键字。}}
+\end{figure}
 
 一般来说，CUDA C 使用三个可在函数声明中使用的限定符关键字扩展了 C 语言。 
 这些关键字的含义总结在图 2.11 中。 “\_\_global\_\_”关键字表示所声明的函数是 CUDA C 内核函数。 
@@ -375,7 +440,11 @@ C 的第二个值得注意的扩展，如图 2.10 所示，是内置变量“thr
 这允许调用内核来处理任意长度的向量。
 
 \subsection{调用核函数}
-{\color{red} Fig 2.12}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F2.12.png}
+	\caption{\textit{向量加法内核调用语句。}}
+\end{figure}
 
 实现内核函数后，剩下的步骤是从主机代码调用该函数来启动网格。 如图 2.12 所示。 当主机代码调用内核时，
 它通过执行配置参数设置网格和线程块尺寸。 配置参数在传统 C 函数参数之前的“$<<<$”和“$>>>$”之间给出。 
@@ -387,7 +456,11 @@ C 的第二个值得注意的扩展，如图 2.10 所示，是内置变量“thr
 我们将启动 $ceil(1000/256.0) = 4$ 个线程块。 结果，该语句将启动 $4 \times 256 = 1024$ 个线程。 
 通过内核中的 if(i < n) 语句，如图 2.10 所示，前 1000 个线程将对 1000 个向量元素执行加法。 其余 24 个不会。
 
-{\color{red} Fig 2.13}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F2.13.png}
+	\caption{\textit{vecAdd 函数中主机代码的完整版本。}}
+\end{figure}
 
 图 2.13 显示了 vecAdd 函数中的最终主机代码。 该源代码完成了图 2.5 中的框架。 
 2.12和2.13共同说明了一个简单的CUDA程序，它由主机代码和设备内核组成。 该代码被硬连线为使用每个 256 个线程的线程块
@@ -415,7 +488,11 @@ C 的第二个值得注意的扩展，如图 2.10 所示，是内置变量“thr
 设备代码标有 CUDA 关键字，指定 CUDA 内核及其关联的辅助函数和数据结构，由 NVCC 编译成称为 PTX 文件的虚拟二进制文件。 
 这些 PTX 文件由 NVCC 的运行时组件进一步编译为真实对象文件，并在支持 CUDA 的 GPU 设备上执行。
 
-{\color{red} Fig 2.14}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figs/F2.14.png}
+	\caption{\textit{CUDA C 程序的编译过程概述。}}
+\end{figure}
 
 \subsection{总结}
 本章提供了 CUDA C 编程模型的快速、简化的概述。 CUDA C 扩展了 C 语言以支持并行计算。 
@@ -450,5 +527,3 @@ CUDA支持一组API函数来为CUDA C程序提供服务。 我们在本章中讨
 本章绝不是对所有 CUDA 功能的全面介绍。 其中一些功能将在本书的其余部分中介绍。 
 然而，我们的重点将放在这些功能支持的关键并行计算概念上。 我们将仅介绍并行编程技术的代码示例中所需的 CUDA C 功能。 
 一般来说，我们鼓励读者始终查阅 CUDA C 编程指南，以了解 CUDA C 功能的更多详细信息。
-
-
